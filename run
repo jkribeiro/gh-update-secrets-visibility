@@ -1,0 +1,9 @@
+#!/usr/bin/env php
+<?php
+
+require 'vendor/autoload.php';
+
+use Jkribeiro\GhUpdateSecretsVisibility;
+
+$app = new GhUpdateSecretsVisibility('config.yml');
+$app->execute();
