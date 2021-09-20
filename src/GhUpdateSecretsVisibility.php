@@ -123,12 +123,27 @@ class GhUpdateSecretsVisibility
             print "[INFO] Updating $secret_name secret" . PHP_EOL;
 
             // List selected repositories for organization secret.
-            $existing_secret_repos = $this->client->organization()->secrets()->selectedRepositories($this->org, $secret_name);
+            $org_secrets_api = $this->client->organization()->secrets();
+            $paginator = new ResultPager($this->client);
+            $parameters = [
+                $this->org,
+                $secret_name,
+            ];
+            $first_page_result = $paginator->fetch($org_secrets_api, 'selectedRepositories', $parameters);
 
-            // Gets the repo IDs only.
+            // Collects the repo IDs from the first page.
             $existing_secret_repos_ids = [];
-            foreach ($existing_secret_repos['repositories'] as $secret_repo) {
+            foreach ($first_page_result['repositories'] as $secret_repo) {
                 $existing_secret_repos_ids[] = $secret_repo['id'];
+            }
+
+            // Paginates the result, if it has pagination.
+            while ($paginator->hasNext()) {
+                $page_result = $paginator->fetchNext();
+
+                foreach ($page_result['repositories'] as $secret_repo) {
+                    $existing_secret_repos_ids[] = $secret_repo['id'];
+                }
             }
 
             $existing_repos_count = count($existing_secret_repos_ids);
